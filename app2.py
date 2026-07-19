@@ -31,4 +31,3 @@ def run_agent2():
         print(f'Claude: {reply}')
         history.append({'role': 'assistant', 'content': reply})
 
-run_agent2()
