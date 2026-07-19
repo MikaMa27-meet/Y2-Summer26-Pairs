@@ -1,0 +1,1 @@
+agent_choose = input("Which agent do you want to run?\nAgent1 is strict, dicipline and goes in depth of analayizing context.\nWhile agent2 is more fun and silly, very cutesty and is caring political support mentor.\nType '1' for agent1, type '2' for agent2 : ")
