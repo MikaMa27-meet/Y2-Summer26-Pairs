@@ -11,3 +11,4 @@ elif agent_choose == '2':
     
 else:
     print("Invalid input, please try again later.")
+    print("yay")
