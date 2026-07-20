@@ -58,6 +58,12 @@ def run_agent1():
     system_message = systa
     history = []
 
+def estimate_tokens(messages):
+    text = ""
+    for message in messages:
+        text += message["content"]
+    return len(text) // 4
+
     while True:
         user_input = input('>> ')
         want_image = any(word in user_input.lower() for word in image_words)
@@ -70,6 +76,9 @@ def run_agent1():
             continue
 
         history.append({'role': 'user', 'content': user_input})
+
+        while estimate_tokens(history) > 2000:
+            history.pop(0) 
 
         if want_image:
             message = client.messages.create(
