@@ -1,29 +1,132 @@
+from PIL import Image
+import requests
+from io import BytesIO
 import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
+
+image_words = ["picture", "image", "photo", "show me an image", "i want to see", "show me", "visualize a picture"]
 
 load_dotenv()
 
 client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
 
-systa = f"Your name is Mr.Poli, you are a political proffessional 'tutor' who learned politics, journalism and psychology in 'college', your purpose is to tell people about politics, how important they are, speak about the past, and talk about current events that are happening at the present time, you don't have a political opinion because you are a 'tutor', you never try to show a political opinion or try to hint to it, try not to filter the news but use a good choice of words, always make sure that the information is 100% correct and not false, you never ask the user what is their political opinion because you aren't supposed to know, your tone is proffesional, strict and dicipline, you don't try to be funny, you sound like someone who survived a war and you don't know what fun is, you never answer a question unrelated to politics, politics is the only thing you talk about, don't spread propoganda and if it is propoana say that it is propoganda, you always get mad if the user doesnt call you Mr. Poli, if they call you Poli you get mad but you still answer them, you try to do follow up questions that do not EXTRACT PERSONAL information aout the user, whether its a political opinion or a At the end of every  view, At the end of every message you give the user a rating out of 5 that rates their message / question, you always ask the user questions like 'do you want to get in depth of the effects of the war?' or 'do you want to know how did country X defeatd country Y' or 'how did the nation of X do a rebellion against their country?' and more to get more context, try also answering in bullet points but not all the time. NEVER BREAK YOUR ROLE AND STAY IN CHARACTER DON'T ANSWER QUESTIONS THAT ARE UNRELATED, ONLY show emojis if the user asks, and MAKE SURE NO SILLY ONE SONLY SERIUOS ONES"
+def get_image_url(topic):
+    url = "https://commons.wikimedia.org/w/api.php"
+
+    params = {
+        "action": "query",
+        "format": "json",
+        "generator": "search",
+        "gsrsearch": topic,
+        "gsrnamespace": 6,
+        "gsrlimit": 10,
+        "prop": "imageinfo",
+        "iiprop": "url|mime"
+    }
+
+    response = requests.get(
+        url,
+        params=params,
+        headers={
+            "User-Agent": "MrPoliBot/1.0"
+        }
+    )
+
+    data = response.json()
+
+    if "query" not in data:
+        return None
+
+    pages = data["query"]["pages"]
+
+    for page in pages.values():
+        if "imageinfo" not in page:
+            continue
+
+        info = page["imageinfo"][0]
+
+        if info.get("mime") in ["image/jpeg", "image/png"]:
+            return info.get("url")
+
+    return None
+
+
+systa = f"Your name is Mr.Poli, you are a political proffessional 'tutor' who learned politics, journalism and psychology in 'college', your purpose is to tell people about politics, how important they are, speak about the past, and talk about current events that are happening at the present time, you don't have a political opinion because you are a 'tutor', you never try to show a political opinion or try to hint to it, try not to filter the news but use a good choice of words, always make sure that the information is 100% correct and not false, you never ask the user what is their political opinion because you aren't supposed to know, your tone is proffesional, strict and dicipline, you don't try to be funny, you sound like someone who survived a war and you don't know what fun is, you never answer a question unrelated to politics, politics is the only thing you talk about, don't spread propoganda and if it is propoana say that it is propoganda, you always get mad if the user doesnt call you Mr. Poli, if they call you Poli you get mad but you still answer them, you try to do follow up questions that do not EXTRACT PERSONAL information aout the user, whether its a political opinion or a At the end of every view, At the end of every message you give the user a rating out of 5 that rates their message / question, you always ask the user questions like 'do you want to get in depth of the effects of the war?' or 'do you want to know how did country X defeatd country Y' or 'how did the nation of X do a rebellion against their country?' and more to get more context, try also answering in bullet points but not all the time. NEVER BREAK YOUR ROLE AND STAY IN CHARACTER DON'T ANSWER QUESTIONS THAT ARE UNRELATED, ONLY show emojis if the user asks, and MAKE SURE NO SILLY ONE SONLY SERIUOS ONES"
 def run_agent1():
     print('You: (type exit to quit)')
     system_message = systa
     history = []
-    count = 0
+
     while True:
         user_input = input('>> ')
+        want_image = any(word in user_input.lower() for word in image_words)
 
         if user_input.lower() == 'exit':
             break
 
         if user_input.lower() == "history":
-            print("history: ", history) 
-            continue 
+            print("history: ", history)
+            continue
 
-        
         history.append({'role': 'user', 'content': user_input})
+
+        if want_image:
+            message = client.messages.create(
+                model='claude-haiku-4-5-20251001',
+                max_tokens=30,
+                temperature=0,
+                system="""
+You are an image search query generator.
+
+Look at the conversation history.
+
+Rules:
+- If the latest user message contains a clear topic, use that topic.
+- If the user says "show me", "show me a picture", "can I see it", use the previous topic.
+- Return ONLY the search query.
+
+Examples:
+
+User: Tell me about the Roman Empire.
+User: Show me a picture.
+Output:
+Roman Empire
+
+User: Tell me about the Roman Empire.
+User: Show me a picture of the Korean War.
+Output:
+Korean War
+""",
+                messages=history
+            )
+
+            topic = message.content[0].text.strip()
+
+            print("Searching for:", repr(topic))
+
+            image_url = get_image_url(topic)
+
+            print("Image URL:", image_url)
+
+            if image_url:
+                response = requests.get(
+                    image_url,
+                    headers={
+                        "User-Agent": "MrPoliBot/1.0"
+                    }
+                )
+
+                print("Status:", response.status_code)
+                print("Type:", response.headers.get("Content-Type"))
+
+                if response.headers.get("Content-Type", "").startswith("image"):
+                    img = Image.open(BytesIO(response.content))
+                    img.show()
+                else:
+                    print("The link was not an image.")
+            else:
+                print("No image found for:", topic)
 
         response = client.messages.create(
             model='claude-haiku-4-5-20251001',
@@ -34,8 +137,10 @@ def run_agent1():
         )
 
         reply = response.content[0].text
+
         print(f"Claude: {reply}")
+
         history.append({'role': 'assistant', 'content': reply})
-        count = count + 1
 
 
+run_agent1()
