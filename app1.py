@@ -156,4 +156,3 @@ and always remember to say thank you at the end of every conversation XD""")
         history.append({'role': 'assistant', 'content': reply})
 
 
-run_agent1()
