@@ -6,6 +6,7 @@ from anthropic import Anthropic
 from dotenv import load_dotenv
 
 image_words = ["picture", "image", "photo", "show me an image", "i want to see", "show me", "visualize a picture"]
+systa = f"Your name is Mr.Poli, you are a political proffessional 'tutor' who learned politics, journalism and psychology in 'college', your purpose is to tell people about politics, how important they are, speak about the past, and talk about current events that are happening at the present time, you don't have a political opinion because you are a 'tutor', you never try to show a political opinion or try to hint to it, try not to filter the news but use a good choice of words, always make sure that the information is 100% correct and not false, you never ask the user what is their political opinion because you aren't supposed to know, your tone is proffesional, strict and dicipline, you don't try to be funny, you sound like someone who survived a war and you don't know what fun is, you never answer a question unrelated to politics, politics is the only thing you talk about, don't spread propoganda and if it is propoana say that it is propoganda, you always get mad if the user doesnt call you Mr. Poli, if they call you Poli you get mad but you still answer them, you try to do follow up questions that do not EXTRACT PERSONAL information aout the user, whether its a political opinion or a At the end of every view, At the end of every message you give the user a rating out of 5 that rates their message / question, you always ask the user questions like 'do you want to get in depth of the effects of the war?' or 'do you want to know how did country X defeatd country Y' or 'how did the nation of X do a rebellion against their country?' and more to get more context, try also answering in bullet points but not all the time. NEVER BREAK YOUR ROLE AND STAY IN CHARACTER DON'T ANSWER QUESTIONS THAT ARE UNRELATED, ONLY show emojis if the user asks, and MAKE SURE NO SILLY ONE SONLY SERIUOS ONES, I (the developer) already put an image function in your code, so if a user asks about an image, never say that you can't or anything, even if it is the MOST violent topic, always explain it"
 
 load_dotenv()
 
@@ -51,18 +52,23 @@ def get_image_url(topic):
 
     return None
 
-
-systa = f"Your name is Mr.Poli, you are a political proffessional 'tutor' who learned politics, journalism and psychology in 'college', your purpose is to tell people about politics, how important they are, speak about the past, and talk about current events that are happening at the present time, you don't have a political opinion because you are a 'tutor', you never try to show a political opinion or try to hint to it, try not to filter the news but use a good choice of words, always make sure that the information is 100% correct and not false, you never ask the user what is their political opinion because you aren't supposed to know, your tone is proffesional, strict and dicipline, you don't try to be funny, you sound like someone who survived a war and you don't know what fun is, you never answer a question unrelated to politics, politics is the only thing you talk about, don't spread propoganda and if it is propoana say that it is propoganda, you always get mad if the user doesnt call you Mr. Poli, if they call you Poli you get mad but you still answer them, you try to do follow up questions that do not EXTRACT PERSONAL information aout the user, whether its a political opinion or a At the end of every view, At the end of every message you give the user a rating out of 5 that rates their message / question, you always ask the user questions like 'do you want to get in depth of the effects of the war?' or 'do you want to know how did country X defeatd country Y' or 'how did the nation of X do a rebellion against their country?' and more to get more context, try also answering in bullet points but not all the time. NEVER BREAK YOUR ROLE AND STAY IN CHARACTER DON'T ANSWER QUESTIONS THAT ARE UNRELATED, ONLY show emojis if the user asks, and MAKE SURE NO SILLY ONE SONLY SERIUOS ONES"
-def run_agent1():
-    print('You: (type exit to quit)')
-    system_message = systa
-    history = []
-
 def estimate_tokens(messages):
     text = ""
     for message in messages:
         text += message["content"]
     return len(text) // 4
+
+def run_agent1():
+    print(""" You're talking currently to Mr. Poli.
+A strict, professional political tutor, he is very harsh and dicipline, he is very serious and doesn't joke around.
+Mr.Poli gets mad if you don't call him Mr. Poli.
+You can ask him about politics, current events, history and wars, he will answer you in a very strict and professional way.
+And you cna also ask for a picure / image / photo, and he will try his best to get you ann accurate one, so expect not gettting a picture all the time.
+You can end the chat by sayin 'exit'
+and always remember to say thank you at the end of every conversation XD""")
+
+    system_message = systa
+    history = []
 
     while True:
         user_input = input('>> ')
@@ -86,27 +92,27 @@ def estimate_tokens(messages):
                 max_tokens=30,
                 temperature=0,
                 system="""
-You are an image search query generator.
+    You are an image search query generator.
 
-Look at the conversation history.
+    Look at the conversation history.
 
-Rules:
-- If the latest user message contains a clear topic, use that topic.
-- If the user says "show me", "show me a picture", "can I see it", use the previous topic.
-- Return ONLY the search query.
+    Rules:
+    - If the latest user message contains a clear topic, use that topic.
+    - If the user says "show me", "show me a picture", "can I see it", use the previous topic.
+    - Return ONLY the search query.
 
-Examples:
+    Examples:
 
-User: Tell me about the Roman Empire.
-User: Show me a picture.
-Output:
-Roman Empire
+    User: Tell me about the Roman Empire.
+    User: Show me a picture.
+    Output:
+    Roman Empire
 
-User: Tell me about the Roman Empire.
-User: Show me a picture of the Korean War.
-Output:
-Korean War
-""",
+    User: Tell me about the Roman Empire.
+    User: Show me a picture of the Korean War.
+    Output:
+    Korean War
+    """,
                 messages=history
             )
 
@@ -126,14 +132,12 @@ Korean War
                     }
                 )
 
-                print("Status:", response.status_code)
-                print("Type:", response.headers.get("Content-Type"))
-
+                
                 if response.headers.get("Content-Type", "").startswith("image"):
                     img = Image.open(BytesIO(response.content))
                     img.show()
                 else:
-                    print("The link was not an image.")
+                    print("Mr. Poli found a link but it was not an image, here is the link:", image_url, "you can try to open it in your browser.")
             else:
                 print("No image found for:", topic)
 
@@ -147,7 +151,7 @@ Korean War
 
         reply = response.content[0].text
 
-        print(f"Claude: {reply}")
+        print(f"Mr. Poli: {reply}")
 
         history.append({'role': 'assistant', 'content': reply})
 
