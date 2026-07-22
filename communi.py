@@ -10,7 +10,5 @@ def communi(topic):
         summary = "No summary was generated."
 
     print("Summary now is being transported to Ms. Malak, you will make your debate plan with her!")
-    tttopic = "I have a debate / MUN simulation, this is the summary of the topic :" + summary + " help me make a plan!"
+    tttopic = "I have a debate / MUN simulation, this is the summary of the topic :" + summary + " help me make a plan, do NOT ask me more than 3 questions."
     run_agent2(tttopic)
-
-communi("roman empire")
